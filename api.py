@@ -5,8 +5,31 @@ from google.oauth2.service_account import Credentials
 app = Flask(__name__)
 
 # Google Sheets Setup
-json_key_file = "wossom_service_account.json"
-creds = Credentials.from_service_account_file(json_key_file, scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
+import json
+import os
+from google.oauth2.service_account import Credentials
+from flask import Flask, jsonify
+import gspread
+
+app = Flask(__name__)
+
+# Load credentials from Render environment variables
+json_key = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+creds = Credentials.from_service_account_info(json_key, scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
+client = gspread.authorize(creds)
+
+SHEET_NAME = "venda ap"  # Change if using a different sheet
+sheet = client.open(SHEET_NAME).sheet1
+
+@app.route("/get_data", methods=["GET"])
+def get_data():
+    """API endpoint to fetch Google Sheets data."""
+    data = sheet.get_all_records()
+    return jsonify(data)
+
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
+
 client = gspread.authorize(creds)
 
 SHEET_NAME = "venda ap"  # Change to your actual sheet name
